@@ -1,0 +1,9 @@
+sqlalchemy
+tornado
+#fastapi
+uvicorn
+pymysql
+bcrypt
+cryptography
+pyjwt
+pandas
