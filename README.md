@@ -7,6 +7,7 @@ python -m venv .
 
 ### Step2: Install requirements.txt
 ```
+source bin/activate
 pip install -r requirements.txt
 ```
 
