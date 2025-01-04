@@ -34,6 +34,6 @@ python createadmin.py
 
 ### Step6: Run Server.
 ```
-python api/server,py
+python api/server.py
 ```
 
