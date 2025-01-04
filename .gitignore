@@ -169,13 +169,12 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
-./bin
-./include
-./config
-./pyvenv.cfg
-./samplecurls
+/bin
+/include
+/config
+pyvenv.cfg
+/samplecurls
 .DS_Store
-./schema
-./db/archive/*
-./api/stale.py
-
+/schema
+/db/archive/*
+/api/stale.py
