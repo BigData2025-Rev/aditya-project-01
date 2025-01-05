@@ -26,7 +26,7 @@ class Register(tornado.web.RequestHandler):
                 # logger.debug("Request body -> email: %s" %data['username'])
 
                 user_exists = False
-                
+
                 try:
                     user_exists = session.query(User).filter(or_(User.username==data['username'], User.email==data['email'])).first()
                     logger.info("User exists: %s"%user_exists)
@@ -42,12 +42,17 @@ class Register(tornado.web.RequestHandler):
 
                 if not user_exists:
                     new_user = User(username=data['username'], email=data['email'], country=data['country'])
+                    if 'deposit_amount' in data:
+                        new_user = User(username=data['username'],\
+                                    email=data['email'], country=data['country'],
+                                    wallet_balance=data['deposit_amount'])
+
                     new_user.set_password(data['password'])
                     session.add(new_user)
                     session.commit()
-                
+
                     self.write({"message": f"Hi {new_user.username}, you are registered!", "status": "success"})
-                
+
 
         except Exception as e:
             logger.exception(str(e))

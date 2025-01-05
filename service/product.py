@@ -33,9 +33,9 @@ class ProductList(tornado.web.RequestHandler):
                     temp['category'] = category.name
                     temp['price'] = f"{product.price:.2f}"
                     prepared_response.append(temp)
-                
+
                 self.write({"products": prepared_response})
-                
+
         except:
             self.set_status(500)
             self.write({"message": "Something went wrong!"})

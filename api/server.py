@@ -12,6 +12,7 @@ from service.login import Login
 from service.admin import AdminGetUsers, AdminGetOrders, AdminRemoveUser, AdminUpdateUser, AdminUpdateOrder
 from service.product import ProductList
 from service.order import OrderSingle, OrderList
+from service.user import UserAddBalance
 from db.base import Base, engine
 
 
@@ -26,7 +27,8 @@ routes = [
     (r'/getallorders', AdminGetOrders),
     (r'/user/update/([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})', AdminUpdateUser),
     (r'/user/delete/([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})', AdminRemoveUser),
-    (r'/order/update/(\d+)', AdminUpdateOrder)
+    (r'/order/update/(\d+)', AdminUpdateOrder),
+    (r'/user/addbalance', UserAddBalance)
 
 ]
 

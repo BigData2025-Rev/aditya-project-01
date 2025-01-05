@@ -29,12 +29,12 @@ class OrderSingle(tornado.web.RequestHandler):
                                               order.product_id (int) and quantity (int) should contain a \
                                               single value enclosed."})
                     return
-                
+
                 product_id = int(self.data['product_id'])
                 quantity = int(self.data['quantity'])
 
                 logger.info(f"Product id: {product_id}, quantity: {quantity}")
-                
+
                 # get the product
                 product = session.query(Product).filter(Product.id==product_id).first()
 
@@ -46,26 +46,32 @@ class OrderSingle(tornado.web.RequestHandler):
                     self.set_status(409)
                     self.write({"message": f"Not enough stock available. Only {product.stock_quantity} items left."})
                     return
-                
-                
-                
+
                 # place the order
                 total_amount = product.price * quantity
-                # logger.info("HERE>>>>>>>>>>>>>")
-                order = Order(ordered_by=self.current_user.id, total=total_amount)
+                logger.info(f"Current User is: {uuid.UUID(bytes=self.current_user.id)}")
+                current_user = session.query(User).filter(User.id==self.current_user.id).first()
+                logger.info("Current User balance: %s Total Amount: %s" %(current_user.wallet_balance, total_amount))
+                if current_user.wallet_balance < total_amount:
+                    self.set_status(402)
+                    self.write({"message": "You don't have enough balance. Please add funds to your account!"})
+                    return
+                order = Order(ordered_by=current_user.id, total=total_amount)
                 session.add(order)
                 session.commit()
-                
-                persisted_order = session.query(Order).filter(Order.ordered_by==self.current_user.id).first()
-                
 
+                logger.info(f"Order placed! {order.id} for {order.total}")
                 # place individual order items
-                order_item = OrderItem(quantity=quantity, unitprice=product.price, order_id=persisted_order.id, product_id=product.id)
+                order_item = OrderItem(quantity=quantity, unitprice=product.price, order_id=order.id, product_id=product.id)
                 session.add(order_item)
+                session.commit()
+
+                current_user.wallet_balance-=total_amount
                 session.commit()
 
                 product.stock_quantity -= quantity
                 session.commit()
+
                 self.write({'order_id': order.id, "total_amount": f"{total_amount:.2f}"})
             except Exception as e:
                 logger.info(f"Could not order! {e}")

@@ -35,6 +35,7 @@ class AdminGetUsers(tornado.web.RequestHandler):
                     temp['id'] = str(uuid.UUID(bytes=user.id))
                     temp['username'] = user.username
                     temp['created_at'] = str(user.created_at)
+                    temp['wallet_balance'] = user.wallet_balance
                     temp['role'] = str(user.role)
                     prepared_response.append(temp)
                 logger.info("Users: %s"%users)

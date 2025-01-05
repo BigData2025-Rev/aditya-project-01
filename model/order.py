@@ -26,7 +26,7 @@ class Order(Base):
     total = Column(Float)
 
     order_items = relationship("OrderItem", back_populates="order", cascade="all, delete-orphan")
-    user = relationship("User", back_populates="order")
+    user = relationship("User", back_populates="orders")
 
     @property
     def status_enum(self):

@@ -6,7 +6,7 @@ import uuid
 import enum
 
 from logger.logger import logger
-from sqlalchemy import Column, Integer, String, DateTime, BINARY, LargeBinary
+from sqlalchemy import Column, String, DateTime, BINARY, Float
 from sqlalchemy.orm import relationship
 from sqlalchemy import event
 from model.order import Order
@@ -27,10 +27,11 @@ class User(Base):
     role = Column(String(20), nullable=False, default=Role.user.value)
     password_hash = Column(String(100), nullable=False)
     country = Column(String(50))
+    wallet_balance = Column(Float, default=0.0)
     created_at = Column(DateTime, default=datetime.now())
     updated_at = Column(DateTime, default=datetime.now())
 
-    order = relationship('Order', back_populates='user', cascade='all, delete-orphan')
+    orders = relationship('Order', back_populates='user', cascade='all, delete-orphan')
 
     def set_password(self, password):
         password_bytes = password.encode('utf-8')
