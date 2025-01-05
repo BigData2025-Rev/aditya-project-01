@@ -9,26 +9,22 @@ from model.user import User, Role
 from model.order import Order, OrderStatus
 from utils.decorators.adminaccess import admin_required
 from utils.decorators.useraccess import access_token_required
+from utils.decorators.request import json_required, json_optional
 
 
 class AdminGetUsers(tornado.web.RequestHandler):
 
     @access_token_required
     @admin_required
+    @json_optional
     def get(self):
         limit = 100
         offset = 0
-        try:
-            data = json.loads(self.request.body)
-            logger.info("json data: %s" %data)
-
-            if data:
-                if 'limit' in data:
-                    limit = data['limit']
-                if 'offset' in data:
-                    offset = data['offset']
-        except json.JSONDecodeError:
-            pass
+        if self.data:
+            if 'limit' in self.data:
+                limit = self.data['limit']
+            if 'offset' in self.data:
+                offset = self.data['offset']
 
         try:
             with Db() as session:
@@ -52,18 +48,15 @@ class AdminGetUsers(tornado.web.RequestHandler):
 class AdminGetOrders(tornado.web.RequestHandler):
     @access_token_required
     @admin_required
+    @json_optional
     def get(self):
         limit = 100
         offset = 0
-        try:
-            data = json.loads(self.request.body)
-            if data:
-                if 'limit' in data:
-                    limit = data['limit']
-                if 'offset' in data:
-                    offset = data['offset']
-        except json.JSONDecodeError:
-            pass
+        if self.data:
+            if 'limit' in self.data:
+                limit = self.data['limit']
+            if 'offset' in self.data:
+                offset = self.data['offset']
 
         try:
             limit = 100
@@ -95,34 +88,27 @@ class AdminRemoveUser(tornado.web.RequestHandler):
 class AdminUpdateUser(tornado.web.RequestHandler):
     @access_token_required
     @admin_required
+    @json_required
     def patch(self, user_id):
         with Db() as session:
             try:
-                data = json.loads(self.request.body)
-            except json.JSONDecodeError as e:
-                logger.info(f"Could not parse JSON {e}")
-                self.set_status(400)
-                self.write({"message": "Expected JSON in request body. Got None"})
-                return
-
-            try:
-                if 'username' in data or 'role' in data or 'email' in data or 'password' in data:
-                    if 'username' in data:
-                        session.query(User).filter(User.id==uuid.UUID(user_id).bytes).update({"username": data['username']})
+                if 'username' in self.data or 'role' in self.data or 'email' in self.data or 'password' in self.data:
+                    if 'username' in self.data:
+                        session.query(User).filter(User.id==uuid.UUID(user_id).bytes).update({"username": self.data['username']})
                         session.commit()
 
-                    if 'role' in data:
-                        session.query(User).filter(User.id==uuid.UUID(user_id).bytes).update({"role": Role[data['role']].value})
+                    if 'role' in self.data:
+                        session.query(User).filter(User.id==uuid.UUID(user_id).bytes).update({"role": Role[self.data['role']].value})
                         session.commit()
 
-                    if 'email' in data:
-                        session.query(User).filter(User.id==uuid.UUID(user_id).bytes).update({"email": data['email']})
+                    if 'email' in self.data:
+                        session.query(User).filter(User.id==uuid.UUID(user_id).bytes).update({"email": self.data['email']})
                         session.commit()
 
-                    if 'password' in data:
+                    if 'password' in self.data:
                         user = session.query(User).filter(User.id==uuid.UUID(user_id).bytes).first()
                         if user:
-                            user.set_password(data['password'])
+                            user.set_password(self.data['password'])
                             session.commit()
 
                     self.write({"message": "Success!"})
@@ -139,21 +125,14 @@ class AdminUpdateUser(tornado.web.RequestHandler):
 class AdminUpdateOrder(tornado.web.RequestHandler):
     @access_token_required
     @admin_required
+    @json_required
     def patch(self, order_id):
         with Db() as session:
             try:
-                data = json.loads(self.request.body)
-            except json.JSONDecodeError as e:
-                logger.info(f"Could not parse JSON {e}")
-                self.set_status(400)
-                self.write({"message": "Expected JSON in request body. Got None"})
-                return
-
-            try:
-                if 'order_status' in data:
+                if 'order_status' in self.data:
                     order = session.query(Order).filter(Order.id==order_id).first()
                     if order:
-                        order.status = OrderStatus[data['order_status']].value
+                        order.status = OrderStatus[self.data['order_status']].value
                         session.commit()
                         self.write({"message": "Success!"})
 

@@ -13,31 +13,25 @@ from model.orderitem import OrderItem
 from model.product import Product
 from model.user import User
 from utils.decorators.useraccess import access_token_required
+from utils.decorators.request import json_required
+
 
 class OrderSingle(tornado.web.RequestHandler):
-
     @access_token_required
+    @json_required
     def post(self):
         with Db() as session:
             try:
-                data = json.loads(self.request.body)
-            except json.JSONDecodeError:
-                self.set_status(400)
-                self.write({"message": "Expected JSON in request body. Got None"})
-                return
-            
-            try:
-                
-                if 'product_id' not in data or 'quantity' not in data or \
-                    (type(data['product_id']) != int or type(data['quantity']) != int) :
+                if 'product_id' not in self.data or 'quantity' not in self.data or \
+                    (type(self.data['product_id']) != int or type(self.data['quantity']) != int) :
                     self.set_status(400)
                     self.write({"message": "product_id and quantity are required to place an \
                                               order.product_id (int) and quantity (int) should contain a \
                                               single value enclosed."})
                     return
                 
-                product_id = int(data['product_id'])
-                quantity = int(data['quantity'])
+                product_id = int(self.data['product_id'])
+                quantity = int(self.data['quantity'])
 
                 logger.info(f"Product id: {product_id}, quantity: {quantity}")
                 
@@ -83,7 +77,7 @@ class OrderSingle(tornado.web.RequestHandler):
     def get(self, order_id):
         with Db() as session:
             try:
-                logger.info("Order>>>>>>>>: %s"%order_id)
+                logger.info("Order: %s"%order_id)
                 order = session.query(Order).filter(Order.id==order_id, Order.ordered_by==self.current_user.id).first()
                 if order:
                     self.write(json.dumps(Order.get_json_value(order)))
@@ -94,6 +88,7 @@ class OrderSingle(tornado.web.RequestHandler):
                 self.set_status(400)
                 self.write({"message": "Expected JSON in request body. Got None"})
                 return
+
 
 class OrderList(tornado.web.RequestHandler):
     @access_token_required

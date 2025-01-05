@@ -4,8 +4,6 @@ from db.session import session as Db
 from model.user import Role
 from logger.logger import logger
 
-SECRET_KEY=os.getenv('JWT_SECRET')
-
 
 def admin_required(f):
     """
