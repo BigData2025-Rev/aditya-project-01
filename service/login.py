@@ -40,6 +40,9 @@ class Login(tornado.web.RequestHandler):
                                         os.getenv('JWT_SECRET'), algorithm="HS256")
                     logger.debug("token %s" %token)
                     self.write({"token": token})
+                else:
+                    self.set_status(401)
+                    self.write({"message": "Incorrect password!"})
 
             except Exception as e:
                 logger.info(e)

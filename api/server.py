@@ -9,7 +9,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 from logger.logger import logger
 from service.register import Register
 from service.login import Login
-from service.admin import AdminGetUsers, AdminGetOrders
+from service.admin import AdminGetUsers, AdminGetOrders, AdminRemoveUser, AdminUpdateUser, AdminUpdateOrder
 from service.product import ProductList
 from service.order import OrderSingle, OrderList
 from db.base import Base, engine
@@ -23,7 +23,10 @@ routes = [
     (r'/order', OrderSingle),
     (r'/order/(\d+)', OrderSingle),
     (r'/orders', OrderList),
-    (r'/getallorders', AdminGetOrders)
+    (r'/getallorders', AdminGetOrders),
+    (r'/user/update/([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})', AdminUpdateUser),
+    (r'/user/delete/([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})', AdminRemoveUser),
+    (r'/order/update/(\d+)', AdminUpdateOrder)
 
 ]
 

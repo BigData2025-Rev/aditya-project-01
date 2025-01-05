@@ -31,7 +31,9 @@ class OrderSingle(tornado.web.RequestHandler):
                 if 'product_id' not in data or 'quantity' not in data or \
                     (type(data['product_id']) != int or type(data['quantity']) != int) :
                     self.set_status(400)
-                    self.write({"""message": "product_id and quantity are required to place an order.product_id (int) and quantity (int) should contain a single value enclosed."""})
+                    self.write({"message": "product_id and quantity are required to place an \
+                                              order.product_id (int) and quantity (int) should contain a \
+                                              single value enclosed."})
                     return
                 
                 product_id = int(data['product_id'])

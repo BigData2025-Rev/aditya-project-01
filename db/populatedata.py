@@ -49,7 +49,7 @@ if __name__=='__main__':
                             no_ratings = float(row['no_of_ratings'])
                             rating = float(row['ratings'])
                             ctgry = session.query(Category).filter(Category.name==row['main_category']).first()
-                            product = Product(name=row['name'], category_id=ctgry.id, image=row['image'], rating=rating,d\
+                            product = Product(name=row['name'], category_id=ctgry.id, image=row['image'], rating=rating,\
                                       no_of_ratings=no_ratings, price=convert_rupees_to_usd(row['actual_price']), stock_quantity=random.randint(0, 50))
                             session.add(product)
                             session.commit()

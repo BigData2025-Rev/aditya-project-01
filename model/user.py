@@ -8,6 +8,8 @@ import enum
 from logger.logger import logger
 from sqlalchemy import Column, Integer, String, DateTime, BINARY, LargeBinary
 from sqlalchemy.orm import relationship
+from sqlalchemy import event
+from model.order import Order
 from db.base import Base
 
 
@@ -46,3 +48,16 @@ class User(Base):
     @property
     def role_enum(self):
         return Role[self.role.lower()]
+
+@event.listens_for(User, 'before_delete')
+def set_ordered_by_on_user_delete(cls, user, connection):
+    """
+    This method is triggered before a user is deleted.
+    It updates the 'ordered_by' field in all related orders.
+    """
+    logger.info(f"Before deleting User with ID: {user.id}")
+    connection.execute(
+        Order.__table__.update()
+        .where(Order.ordered_by == user.id)  # Find orders related to this user
+        .values(ordered_by=user.id)  # Set the 'ordered_by' field to the User's ID
+    )

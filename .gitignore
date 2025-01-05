@@ -178,3 +178,4 @@ pyvenv.cfg
 /schema
 /db/archive/*
 /api/stale.py
+/samples
