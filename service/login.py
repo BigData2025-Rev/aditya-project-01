@@ -1,4 +1,4 @@
-import tornado.web
+from service.basehandler import BaseHandler
 import json
 import jwt
 import os
@@ -8,38 +8,33 @@ from db.session import session as Db
 from logger.logger import logger
 
 from model.user import User
+from utils.decorators.request import json_required
 
-class Login(tornado.web.RequestHandler):
+class Login(BaseHandler):
+    @json_required
     def post(self):
         with Db() as session:
-            try:
-                data = json.loads(self.request.body)
-            except json.JSONDecodeError:
-                self.set_status(400)
-                self.write({"message": "Expected JSON in request body. Got None"})
-                return
-
             # logger.info("Data: %s" %data)
-            if not ('username' in data and 'password' in data):
+            if not ('username' in self.data and 'password' in self.data):
                 self.send_error(400)
                 return
 
             try:
-                user = session.query(User).filter(User.username==data['username']).first()
+                user = session.query(User).filter(User.username==self.data['username']).first()
                 logger.debug("User Exists: %s" %user)
                 if not user:
-                    logger.info("User not found! %s" %data['username'])
+                    logger.info("User not found! %s" %self.data['username'])
                     self.write("User not found! Try registering first.\n")
                     return
 
                 logger.info("User: %s" %user)
-                logger.info("Password correct for user %s -> %s"%(user.username, user.check_password(data['password'])))
-                if user.check_password(data['password']):
+                logger.info("Password correct for user %s -> %s"%(user.username, user.check_password(self.data['password'])))
+                if user.check_password(self.data['password']):
                     expiration = datetime.datetime.now() + datetime.timedelta(minutes=50)
                     token = jwt.encode({"sub": user.username, "exp": expiration.timestamp()},
                                         os.getenv('JWT_SECRET'), algorithm="HS256")
                     logger.debug("token %s" %token)
-                    self.write({"token": token})
+                    self.write({"token": token, "success": True})
                 else:
                     self.set_status(401)
                     self.write({"message": "Incorrect password!"})

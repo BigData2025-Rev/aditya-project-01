@@ -1,6 +1,8 @@
-import tornado.web
-import json
+from service.basehandler import BaseHandler
+import jwt
+import datetime
 import uuid
+import os
 from sqlalchemy.exc import IntegrityError, OperationalError, DataError, DatabaseError, StatementError
 
 from db.session import session as Db
@@ -12,7 +14,50 @@ from utils.decorators.useraccess import access_token_required
 from utils.decorators.request import json_required, json_optional
 
 
-class AdminGetUsers(tornado.web.RequestHandler):
+class AdminLogin(BaseHandler):
+    @json_required
+    def post(self):
+        with Db() as session:
+            if not ('username' in self.data and 'password' in self.data):
+                self.send_error(400)
+                return
+
+            try:
+                user = session.query(User).filter(User.username==self.data['username']).first()
+                logger.debug("User Exists: %s" %user)
+                if not user:
+                    logger.info("User not found! %s" %self.data['username'])
+                    self.set_status(403)
+                    self.write({"success": False, "message": "User not found! Try registering first.\n"})
+                    return
+
+                if not user.role==Role.admin.value:
+                    logger.info("User not admin!")
+                    self.set_status(401)
+                    self.write({"success": False, "message": "You don't have access to this page!"})
+                    return
+
+                logger.info("User: %s" %user)
+                logger.info("Password correct for user %s -> %s"%(user.username, user.check_password(self.data['password'])))
+                if user.check_password(self.data['password']):
+                    expiration = datetime.datetime.now() + datetime.timedelta(minutes=50)
+                    token = jwt.encode({"sub": user.username, "exp": expiration.timestamp()},
+                                        os.getenv('JWT_SECRET'), algorithm="HS256")
+                    logger.debug("token %s" %token)
+                    self.set_status(200)
+                    self.write({"token": token, "success": True})
+                else:
+                    self.set_status(401)
+                    self.write({"message": "Incorrect password!"})
+
+            except Exception as e:
+                logger.info(e)
+
+            except Exception as e:
+                pass
+
+
+class AdminGetUsers(BaseHandler):
 
     @access_token_required
     @admin_required
@@ -39,6 +84,7 @@ class AdminGetUsers(tornado.web.RequestHandler):
                     temp['role'] = str(user.role)
                     prepared_response.append(temp)
                 logger.info("Users: %s"%users)
+                self.set_status(200)
                 self.write({"users": prepared_response})
         except Exception as e:
             self.set_status(500)
@@ -46,7 +92,7 @@ class AdminGetUsers(tornado.web.RequestHandler):
             self.write({"message": "Could not get users!"})
 
 
-class AdminGetOrders(tornado.web.RequestHandler):
+class AdminGetOrders(BaseHandler):
     @access_token_required
     @admin_required
     @json_optional
@@ -71,7 +117,7 @@ class AdminGetOrders(tornado.web.RequestHandler):
             self.write({"message": "Could not get orders!"})
 
 
-class AdminRemoveUser(tornado.web.RequestHandler):
+class AdminRemoveUser(BaseHandler):
     @access_token_required
     @admin_required
     def delete(self, user_id):
@@ -86,7 +132,7 @@ class AdminRemoveUser(tornado.web.RequestHandler):
                 self.set_status(500)
 
 
-class AdminUpdateUser(tornado.web.RequestHandler):
+class AdminUpdateUser(BaseHandler):
     @access_token_required
     @admin_required
     @json_required
@@ -123,7 +169,7 @@ class AdminUpdateUser(tornado.web.RequestHandler):
                 self.write({"message": "Expected JSON in request body. Got None"})
 
 
-class AdminUpdateOrder(tornado.web.RequestHandler):
+class AdminUpdateOrder(BaseHandler):
     @access_token_required
     @admin_required
     @json_required

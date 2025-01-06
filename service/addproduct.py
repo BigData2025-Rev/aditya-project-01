@@ -1,4 +1,4 @@
-import tornado.web
+from service.basehandler import BaseHandler
 import json
 
 from db.session import session as Db
@@ -14,7 +14,7 @@ class Product(BaseModel):
     category: str
 
 
-class AddProduct(tornado.web.RequestHandler):
+class AddProduct(BaseHandler):
     def post(self):
         raw = json.loads(self.request.body)
         logger.info(raw)

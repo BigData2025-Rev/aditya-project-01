@@ -1,7 +1,4 @@
-import tornado.web
-import json
-import os
-import datetime
+from service.basehandler import BaseHandler
 import random
 
 from db.session import session as Db
@@ -11,7 +8,7 @@ from model.product import Product
 from model.category import Category
 from utils.decorators.useraccess import access_token_required
 
-class ProductList(tornado.web.RequestHandler):
+class ProductList(BaseHandler):
 
     @access_token_required
     def get(self):

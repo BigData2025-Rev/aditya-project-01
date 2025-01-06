@@ -1,8 +1,4 @@
-import tornado.web
-import json
-import os
-import datetime
-import random
+from service.basehandler import BaseHandler
 import uuid
 
 from model.user import User
@@ -13,7 +9,7 @@ from utils.decorators.useraccess import access_token_required
 from utils.decorators.request import json_required
 
 
-class UserAddBalance(tornado.web.RequestHandler):
+class UserAddBalance(BaseHandler):
     @access_token_required
     @json_required
     def post(self):

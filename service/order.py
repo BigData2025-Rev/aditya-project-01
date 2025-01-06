@@ -1,8 +1,5 @@
-import tornado.web
+from service.basehandler import BaseHandler
 import json
-import os
-import datetime
-import random
 import uuid
 
 from db.session import session as Db
@@ -16,7 +13,7 @@ from utils.decorators.useraccess import access_token_required
 from utils.decorators.request import json_required
 
 
-class OrderSingle(tornado.web.RequestHandler):
+class OrderSingle(BaseHandler):
     @access_token_required
     @json_required
     def post(self):
@@ -96,7 +93,7 @@ class OrderSingle(tornado.web.RequestHandler):
                 return
 
 
-class OrderList(tornado.web.RequestHandler):
+class OrderList(BaseHandler):
     @access_token_required
     def get(self):
         with Db() as session:
