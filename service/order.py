@@ -99,7 +99,7 @@ class OrderList(BaseHandler):
         with Db() as session:
             try:
                 orders = session.query(Order).filter(Order.ordered_by==self.current_user.id).all()
-                logger.info("User %s" %self.current_user.id)
+                # logger.info("User %s" %self.current_user.id)
                 if orders:
                     self.write({"orders": Order.get_json_values(orders)})
                 else:

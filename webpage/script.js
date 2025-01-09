@@ -1,12 +1,17 @@
+API_URL=''
+
 document.addEventListener('DOMContentLoaded', function () {
     const activeTab = document.querySelector('.nav-link.active');
     if (activeTab) {
-      console.log('Default active tab:', activeTab.id);
+    //   console.log('Default active tab:', activeTab.id);
       if (activeTab.id=='orders-tab') {
         fetchOrders();
       }
-      if (activeTab.id == 'products-tab' || activeTab.id == 'admin-products-tab') {
+      if ( activeTab.id == 'admin-products-tab') {
         fetchAllProducts();
+      }
+      if (activeTab.id == 'products-tab') {
+        fetchProducts();
       }
       if (activeTab.id == 'admin-order-tab') {
         fetchAllOrders();
@@ -19,7 +24,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const tabs = document.querySelectorAll('.nav-link');
     tabs.forEach(tab => {
       tab.addEventListener('click', function() {
-        console.log('Tab clicked:', tab.id);
+        // console.log('Tab clicked:', tab.id);
       });
     });
 
@@ -40,7 +45,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const tab = mutation.target;
         if (tab.classList.contains('active')) {
         tablookup[tab.id]()
-        console.log('Active tab changed to:', tab.textContent);
+        // console.log('Active tab changed to:', tab.textContent);
         }
     }
     }
@@ -82,10 +87,10 @@ async function login() {
         return;
     }
 
-    const response = await fetch('http://localhost:8888/login', {
+    const response = await fetch(`${API_URL}/login`, {
         method: 'POST',
         headers: {
-            'Origin': "http://localhost:3000",
+            'Origin': `${API_URL}`,
             'Content-Type': 'application/json'
         },
         body: JSON.stringify({ username, password })
@@ -124,9 +129,9 @@ async function register() {
         showErrorRegister('Please enter both username and password.');
         return;
     }
-    console.log(JSON.stringify({ username, password, email, country}))
+    // console.log(JSON.stringify({ username, password, email, country}))
     try {
-        const response = await fetch('http://localhost:8888/register', {
+        const response = await fetch(`${API_URL}/register`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -144,6 +149,29 @@ async function register() {
     } catch (error) {
         showErrorRegister("An error occurred. Please try again.");
     }
+}
+
+async function addFunds() {
+    userConfirmation = confirm("Are you sure? ")
+    if (!userConfirmation) {
+        return
+    }
+    const authToken = localStorage.getItem('authToken');
+    deposit_amount = 50;
+    const response = await fetch(`${API_URL}/user/addbalance`, {
+        method: 'POST',
+        headers: {
+            'Authorization': 'Bearer ' + authToken
+        },
+        body : JSON.stringify({ deposit_amount })
+    })
+    const data = await response.json();
+    if (!response.ok) {
+        localStorage.removeItem('authToken')
+        window.location.href = "./main.html";
+    }
+    alert(`${data.message}`)
+
 }
 
 function showError(message) {
@@ -171,7 +199,7 @@ function logout() {
 async function fetchAllUsers() {
     const users_tab = document.getElementById('admin-users-tab')
     const authToken = localStorage.getItem('authToken');
-    const response = await fetch('http://localhost:8888/getallusers', {
+    const response = await fetch(`${API_URL}/getallusers`, {
         method: 'GET',
         headers: {
             'Authorization': 'Bearer ' + authToken
@@ -183,15 +211,18 @@ async function fetchAllUsers() {
     }
     const data = await response.json();
     const users = data.users;
-    console.log(users)
+    // console.log(users)
     const tableBody = document.querySelector('#admin-users tbody');
     tableBody.innerHTML = '';
     users.forEach(user => {
         const row = document.createElement('tr');
-        console.log(user);
+        // console.log(user);
         row.innerHTML = `
+            <td>${user['id']}</td>
             <td>${user['username']}</td>
             <td>${user['email']}</td>
+            <td>${user['created_at']}</td>
+            <td>${user['wallet_balance']}
             <td>${user['role']}</td>`;
         tableBody.appendChild(row);
     });
@@ -201,28 +232,32 @@ async function fetchAllUsers() {
 async function fetchProducts() {
     const products_tab = document.getElementById('products-tab')
     const authToken = localStorage.getItem('authToken');
-    const response = await fetch('http://localhost:8888/products',{
+    const response = await fetch(`${API_URL}/products`,{
                          method: 'GET',
                          headers: {
                             'Authorization': 'Bearer '+ authToken
                          }
                         });
     if (!response.ok) {
+        // const tableBody = document.querySelector('#products tbody');
+        // tableBody.innerHTML = '';
         localStorage.removeItem('authToken')
         window.location.href = "./main.html";
     }
     const data = await response.json();
     const products = JSON.parse(data.products);
+    // console.log(products);
     const tableBody = document.querySelector('#products tbody');
     tableBody.innerHTML = '';
 
     products.forEach(product => {
         const row = document.createElement('tr');
-        console.log(product);
-        row.innerHTML = `<td>${product['name']}</td>
+        // console.log(product);
+        row.innerHTML = `<td><img src="${product['image']}"/></td>
+                        <td>${product['name']}</td>
                          <td>${product['stock']}</td>
                         <td>$${product['price']}</td>
-                        <td><button onclick="addtoCart(${product['product_id']})">Purchase Product</button></td>`;
+                        <td><button class="btn btn-primary" onclick="purchaseProduct(${product['product_id']})">Purchase Product</button></td>`;
         tableBody.appendChild(row);
     });
 }
@@ -230,7 +265,7 @@ async function fetchProducts() {
 async function fetchAllOrders() {
     const users_tab = document.getElementById('admin-orders-tab');
     const authToken = localStorage.getItem('authToken');
-    const response = await fetch('http://localhost:8888/getallorders',{
+    const response = await fetch(`${API_URL}/getallorders`,{
                          method: 'GET',
                          headers: {
                             'Authorization': 'Bearer '+ authToken
@@ -253,9 +288,10 @@ async function fetchAllOrders() {
         tableBody.innerHTML = '';
         orders.forEach(order => {
             const row = document.createElement('tr');
-            order = JSON.parse(order);
-            statusId = order['order_id'];
-            statusString = order['order_status'];
+            value = JSON.parse(order);
+            // console.log(value)
+            const statusId = value['order_id'];
+            const statusString = value['order_status'];
             optionString = ``;
             for (let key in status) {
                 if (key == statusString) {
@@ -264,12 +300,29 @@ async function fetchAllOrders() {
                     optionString += `<option value="${key}" >` + `${status[key]}` + `</option>`
                 }        
             }
+            // // console.log(value)
+            table = `<table>`;
+            tableclose = `</table>`;
+            items = `<tr>`;
+            // console.log(JSON.parse(value.items))
+            if (value.items) {
+                // console.log(value.items.length)
+                value.items.forEach(item => {
 
-            row.innerHTML = `<td>${order['order_id']}</td>
-                            <td>${order['order_status']}</td>
-                            <td><select id="${statusId}">` + optionString +
-                            `</select>
-                            </td>`;
+                    jsonItem = JSON.parse(item)
+                    // <li><img src="${item['product_image']}"/></li>
+                    //<td><img src="${jsonItem['product_image']}"/></td>
+                    items += `<td>${jsonItem['product_name']}</td>
+                              <td>Quantity: ${jsonItem['product_quantity']}</td>`;
+                });
+            }
+            items += '</tr>'
+            //
+            row.innerHTML = `<td>${value['order_id']}</td>
+                             <td>${table + items + tableclose}</td>
+                             <td>${value['order_status']}</td>
+
+                            <td><select id="${statusId}">` + optionString +`</select></td>`;
             tableBody.appendChild(row);
         });
     } else {
@@ -279,12 +332,12 @@ async function fetchAllOrders() {
 }
 
 async function editOrderStatus(event) {
-    console.log(event.target.id)
+    // console.log(event.target.id)
     const id = event.target.id
     order_status = event.target.value;
-    console.log(order_status)
+    // console.log(order_status)
     const authToken = localStorage.getItem('authToken');
-    const response = await fetch(`http://localhost:8888/order/update/${id}`,{
+    const response = await fetch(`${API_URL}/order/update/${id}`,{
         method: 'PATCH',
         headers: {
            'Authorization': 'Bearer '+ authToken
@@ -300,7 +353,7 @@ async function editOrderStatus(event) {
 async function fetchAllProducts() {
     const products_tab = document.getElementById('admin-products-tab')
     const authToken = localStorage.getItem('authToken');
-    const response = await fetch('http://localhost:8888/products',{
+    const response = await fetch(`${API_URL}/products`,{
                          method: 'GET',
                          headers: {
                             'Authorization': 'Bearer '+ authToken
@@ -317,38 +370,39 @@ async function fetchAllProducts() {
 
     products.forEach(product => {
         const row = document.createElement('tr');
-        console.log(product);
+        // console.log(product);
         row.innerHTML = `<td>${product['product_id']}</td>
+                        <td><img src="${product['image']}"/></td>
                          <td>${product['name']}</td>
                          <td>${product['stock']}</td>
                         <td>$${product['price']}</td>
-                        <td><button onclick="editProduct(${product['product_id']})">Edit Product</button></td>`;
+                        <td><button class="btn btn-outline-danger" onclick="removeProduct(${product['product_id']})">Remove Product</button></td>`;
         tableBody.appendChild(row);
     });
 }
 
-async function editProduct(order_id) {
+async function removeProduct(product_id) {
+    console.log(product_id);
     const authToken = localStorage.getItem('authToken');
-    const response = await fetch('http://localhost:8888/order', {
-                                method: 'POST',
+    const response = await fetch(`${API_URL}/product/delete/${product_id}`, {
+                                method: 'DELETE',
                                 headers: {
                                     "Authorization": "Bearer " + authToken
-                                },
-                                body: JSON.stringify({
-                                    "product_id" : product_id,
-                                    "quantity": quantity
-                                    })
+                                }
                             });
     const data = await response.json();
-    console.log(data)
-    if(!response.ok) {
-        alert("Could not add order to cart!");
-    }
+    // console.log(data)
+    alert(`${data.message}`)
+    fetchAllProducts()
 }
 
-async function addtoCart(product_id, quantity=1) {
+async function purchaseProduct(product_id, quantity=1) {
+    userConfirmation = confirm("Are you sure you want to purchase the item? ")
+    if (!userConfirmation) {
+        return
+    }
     const authToken = localStorage.getItem('authToken');
-    const response = await fetch('http://localhost:8888/order', {
+    const response = await fetch(`${API_URL}/order`, {
                                 method: 'POST',
                                 headers: {
                                     "Authorization": "Bearer " + authToken
@@ -358,16 +412,18 @@ async function addtoCart(product_id, quantity=1) {
                                     "quantity": quantity
                                     })
                             });
+    const data = await response.json()
     if(!response.ok) {
-        alert("Could not add order to cart!");
+        alert(`Could not add order to cart! ${data.message}`);
     }
+    fetchProducts()
 
 }
 
 async function fetchOrders() {
     const order_tab = document.getElementById('orders-tab')
     const authToken = localStorage.getItem('authToken');
-    const response = await fetch('http://localhost:8888/orders',{
+    const response = await fetch(`${API_URL}/orders`,{
                          method: 'GET',
                          headers: {
                             'Authorization': 'Bearer '+ authToken
@@ -385,8 +441,21 @@ async function fetchOrders() {
         orders.forEach(order => {
             const row = document.createElement('tr');
             value = JSON.parse(order);
+            // console.log(value)
+            table = `<table>`;
+            tableclose = `</table>`;
+            items = `<tr>`;
+            value.items.forEach(item => {
+                jsonItem = JSON.parse(item)
+                // <li><img src="${item['product_image']}"/></li>
+                items += `<td><img src="${jsonItem['product_image']}"/></td>
+                          <td>${jsonItem['product_name']}</td>
+                          <td>Quantity: ${jsonItem['product_quantity']}</td>`;
+            });
+            items += '</tr>'
             row.innerHTML = `
                 <td>${value['order_id']}</td>
+                <td>${table + items + tableclose}</td>
                 <td>${value['order_status']}</td>`;
             tableBody.appendChild(row);
         });

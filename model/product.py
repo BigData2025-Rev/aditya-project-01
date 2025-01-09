@@ -1,7 +1,10 @@
 from sqlalchemy import Column, Integer, Float, ForeignKey, String
 from sqlalchemy.orm import relationship
+from sqlalchemy import event
 
 from db.base import Base
+from model.orderitem import OrderItem
+from logger.logger import logger
 
 
 class Product(Base):
@@ -19,3 +22,12 @@ class Product(Base):
     order_item = relationship('OrderItem', back_populates='product')
     categ = relationship('Category', back_populates='product')
     
+
+@event.listens_for(Product, 'before_delete')
+def set_product_id_on_product_delete(mapper, connection, product):
+    logger.info(f"Before deleting Product with ID: {product.id}")
+    connection.execute(
+        OrderItem.__table__.update()
+        .where(OrderItem.product_id == product.id)
+        .values(deleted_product_id=product.id)
+    )

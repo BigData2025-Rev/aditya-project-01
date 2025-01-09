@@ -9,6 +9,7 @@ from db.session import session as Db
 from logger.logger import logger
 from model.user import User, Role
 from model.order import Order, OrderStatus
+from model.product import Product
 from utils.decorators.adminaccess import admin_required
 from utils.decorators.useraccess import access_token_required
 from utils.decorators.request import json_required, json_optional
@@ -110,11 +111,12 @@ class AdminGetOrders(BaseHandler):
             limit = 100
             offset = 0
             with Db() as session:
-                orders = session.query(Order).offset(offset).limit(limit).all()
+                orders = session.query(Order).all()
                 # logger.info("Orders: %s" %orders)
                 self.write({"orders": Order.get_json_values(orders)})
-        except Exception:
+        except Exception as e:
             self.set_status(500)
+            logger.info(f"Exception: {e}")
             self.write({"message": "Could not get orders!"})
 
 
@@ -124,13 +126,34 @@ class AdminRemoveUser(BaseHandler):
     def delete(self, user_id):
         with Db() as session:
             try:
-                session.query(User).filter(User.id==uuid.UUID(user_id).bytes).delete(synchronize_session='evaluate')
+                user = session.query(User).filter(User.id==uuid.UUID(user_id).bytes).first()
+                session.delete(user)
                 session.commit()
                 self.write({"message": "Success!"})
             except Exception as e:
                 logger.info(f"Could not delete user: {e}")
                 session.rollback()
                 self.set_status(500)
+                self.write({"message": "Failed to delete User!"})
+
+
+class AdminRemoveProduct(BaseHandler):
+    @access_token_required
+    @admin_required
+    def delete(self, product_id):
+        with Db() as session:
+            try:
+                logger.info(f"Deleting Product with product_id: {product_id}")
+                product = session.query(Product).filter(Product.id==product_id).first()
+                logger.info(product)
+                session.delete(product)
+                session.commit()
+                self.write({"message": "Success!"})
+            except Exception as e:
+                logger.info(f"Could not delete product: {e}")
+                session.rollback()
+                self.set_status(500)
+                self.write({"message": "Failed to delete Product!"})
 
 
 class AdminUpdateUser(BaseHandler):

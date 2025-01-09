@@ -14,21 +14,19 @@ class ProductList(BaseHandler):
     @access_token_required
     def get(self):
         try:
-            limit = 20
+            limit = 15
             with Db() as session:
-                product_count = session.query(Product).count()
-                random_offset = random.randint(0, product_count-limit)
-                products = session.query(Product).offset(45).limit(limit).all()
+                products = session.query(Product).offset(11).limit(limit).all()
                 prepared_response = []
                 for product in products:
-                    category = session.query(Category).filter_by(id=product.category_id).first()
                     temp = {}
                     temp['product_id'] = product.id
                     temp['name'] = product.name
+                    temp['image'] = product.image
                     temp['rating'] = product.rating
                     temp['stock'] = product.stock_quantity
                     temp['number of ratings'] = product.no_of_ratings
-                    temp['category'] = category.name
+                    temp['category'] = product.categ.name
                     temp['price'] = f"{product.price:.2f}"
                     prepared_response.append(temp)
 

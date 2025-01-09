@@ -31,7 +31,7 @@ class User(Base):
     created_at = Column(DateTime, default=datetime.now())
     updated_at = Column(DateTime, default=datetime.now())
 
-    orders = relationship('Order', back_populates='user', cascade='all, delete-orphan')
+    orders = relationship('Order', back_populates='user')
 
     def set_password(self, password):
         password_bytes = password.encode('utf-8')
@@ -50,11 +50,12 @@ class User(Base):
     def role_enum(self):
         return Role[self.role.lower()]
 
+
 @event.listens_for(User, 'before_delete')
-def set_ordered_by_on_user_delete(cls, user, connection):
+def set_ordered_by_on_user_delete(mapper, connection, user):
     logger.info(f"Before deleting User with ID: {user.id}")
     connection.execute(
         Order.__table__.update()
         .where(Order.ordered_by == user.id)
-        .values(ordered_by=user.id)
+        .values(deleted_ordered_by=user.id)
     )

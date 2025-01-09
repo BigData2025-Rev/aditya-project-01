@@ -17,37 +17,29 @@
     <div class="container mt-4">
         <ul class="nav nav-tabs" id="dashboard-tabs" role="tablist">
             <li class="nav-item" role="presentation">
-                <a class="nav-link active" id="orders-tab" onclick="fetchOrders()" data-bs-toggle="tab" href="#orders" role="tab" aria-controls="orders" aria-selected="true">Orders</a>
+                <a class="nav-link active" id="products-tab" onclick="fetchProducts()" data-bs-toggle="tab" href="#products" role="tab" aria-controls="products" aria-selected="true">Products</a>
             </li>
             <li class="nav-item" role="presentation">
-                <a class="nav-link" id="products-tab" onclick="fetchAllProducts()" data-bs-toggle="tab" href="#products" role="tab" aria-controls="products" aria-selected="false">Products</a>
+                <a class="nav-link" id="orders-tab" onclick="fetchOrders()" data-bs-toggle="tab" href="#orders" role="tab" aria-controls="orders" aria-selected="false">Orders</a>
+            </li>
+            <li class="nav-item">
+                <button class="btn btn-success ms-auto" onclick="addFunds()">Deposit $50</button>
             </li>
         </ul>
 
         <div class="tab-content mt-3" id="dashboard-tabs-content">
-            <div class="tab-pane fade show active" id="orders" role="tabpanel" aria-labelledby="orders-tab">
-                <h3>Orders</h3>
-                <p>Here, you can see your orders.</p>
-                <table class="table table-bordered">
-                    <thead>
-                        <th>Order ID</th>
-                        <th>Status</th>
-                    </thead>
-                    <tbody>
-                    </tbody>
-                </table>
-            </div>
-
-            <div class="tab-pane fade" id="products" role="tabpanel" aria-labelledby="products-tab">
+            <div class="tab-pane fade show active" id="products" role="tabpanel" aria-labelledby="products-tab">
                 <h3>Products</h3>
                 <p>Here, you can view and purchase products.</p>
                 <table class="table table-bordered">
                     <thead>
                         <tr>
                             <!-- <th>Product ID</th> -->
+                             <th></th>
                             <th>Name</th>
                             <th>Stock</th>
                             <th>Price</th>
+                            <th></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -55,6 +47,20 @@
                         </tr>
                         <tr>
                         </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="tab-pane fade" id="orders" role="tabpanel" aria-labelledby="orders-tab">
+                <h3>Orders</h3>
+                <p>Here, you can see your orders.</p>
+                <table class="table table-bordered">
+                    <thead>
+                        <th>Order ID</th>
+                        <th>Items</th>
+                        <th>Status</th>
+                    </thead>
+                    <tbody>
                     </tbody>
                 </table>
             </div>
