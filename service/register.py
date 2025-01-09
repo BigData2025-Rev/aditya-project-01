@@ -5,9 +5,10 @@ import json
 
 from logger.logger import logger
 from model.user import User
-
+from utils.decorators.request import json_required
 
 class Register(BaseHandler):
+    @json_required
     def post(self):
         try:
             with Db() as session:

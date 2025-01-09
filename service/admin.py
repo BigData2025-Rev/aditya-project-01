@@ -82,8 +82,9 @@ class AdminGetUsers(BaseHandler):
                     temp['created_at'] = str(user.created_at)
                     temp['wallet_balance'] = user.wallet_balance
                     temp['role'] = str(user.role)
+                    temp['email'] = user.email
                     prepared_response.append(temp)
-                logger.info("Users: %s"%users)
+                # logger.info("Users: %s"%users)
                 self.set_status(200)
                 self.write({"users": prepared_response})
         except Exception as e:

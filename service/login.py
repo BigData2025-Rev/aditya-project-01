@@ -24,7 +24,8 @@ class Login(BaseHandler):
                 logger.debug("User Exists: %s" %user)
                 if not user:
                     logger.info("User not found! %s" %self.data['username'])
-                    self.write("User not found! Try registering first.\n")
+                    self.set_status(401)
+                    self.write({"User not found! Try registering first.\n"})
                     return
 
                 logger.info("User: %s" %user)
@@ -34,7 +35,7 @@ class Login(BaseHandler):
                     token = jwt.encode({"sub": user.username, "exp": expiration.timestamp()},
                                         os.getenv('JWT_SECRET'), algorithm="HS256")
                     logger.debug("token %s" %token)
-                    self.write({"token": token, "success": True})
+                    self.write({"token": token, "role": user.role, "success": True})
                 else:
                     self.set_status(401)
                     self.write({"message": "Incorrect password!"})

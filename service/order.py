@@ -103,7 +103,7 @@ class OrderList(BaseHandler):
                 if orders:
                     self.write({"orders": Order.get_json_values(orders)})
                 else:
-                    self.status(200)
+                    self.set_status(200)
                     self.write({"message": "No orders to show!"})
             except Exception as e:
                 logger.exception(f"Could not process! {e}")

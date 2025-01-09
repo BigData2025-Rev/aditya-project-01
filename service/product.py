@@ -1,4 +1,5 @@
 from service.basehandler import BaseHandler
+import json
 import random
 
 from db.session import session as Db
@@ -17,7 +18,7 @@ class ProductList(BaseHandler):
             with Db() as session:
                 product_count = session.query(Product).count()
                 random_offset = random.randint(0, product_count-limit)
-                products = session.query(Product).offset(random_offset).limit(limit).all()
+                products = session.query(Product).offset(45).limit(limit).all()
                 prepared_response = []
                 for product in products:
                     category = session.query(Category).filter_by(id=product.category_id).first()
@@ -31,7 +32,8 @@ class ProductList(BaseHandler):
                     temp['price'] = f"{product.price:.2f}"
                     prepared_response.append(temp)
 
-                self.write({"products": prepared_response})
+                self.set_status(200)
+                self.write({"products": json.dumps(prepared_response)})
 
         except:
             self.set_status(500)
