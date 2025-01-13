@@ -12,7 +12,7 @@ from service.login import Login
 from service.admin import AdminGetUsers, AdminGetOrders, AdminRemoveUser, AdminUpdateUser, AdminUpdateOrder, AdminLogin, AdminRemoveProduct
 from service.product import ProductList
 from service.order import OrderSingle, OrderList
-from service.user import UserAddBalance
+from service.user import UserAddBalance, UserCartCheckout, UserCartList
 from db.base import Base, engine
 
 
@@ -30,8 +30,9 @@ routes = [
     (r'/product/delete/(\d+)', AdminRemoveProduct),
     (r'/order/update/(\d+)', AdminUpdateOrder),
     (r'/user/addbalance', UserAddBalance),
-    (r'/adminlogin', AdminLogin)
-
+    (r'/adminlogin', AdminLogin),
+    (r'/user/checkout', UserCartCheckout),
+    (r'/user/listcart', UserCartList)
 ]
 
 

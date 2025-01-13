@@ -27,9 +27,8 @@ if __name__=='__main__':
     Base.metadata.create_all(engine)
     files_and_folders = os.listdir(directory_path)
 
-    for i in range(10):
-        ran = random.randint(1, len(files_and_folders))
-        with open(directory_path+files_and_folders[ran], 'r') as file:
+    for filename in files_and_folders:
+        with open(directory_path+filename, 'r') as file:
             data = pd.read_csv(file)
 
             list_cats = data['main_category'].unique()
@@ -50,7 +49,8 @@ if __name__=='__main__':
                             rating = float(row['ratings'])
                             ctgry = session.query(Category).filter(Category.name==row['main_category']).first()
                             product = Product(name=row['name'], category_id=ctgry.id, image=row['image'], rating=rating,\
-                                      no_of_ratings=no_ratings, price=convert_rupees_to_usd(row['actual_price']), stock_quantity=random.randint(0, 50))
+                                      no_of_ratings=no_ratings, price=convert_rupees_to_usd(row['actual_price']), \
+                                      stock_quantity=random.randint(0, 50))
                             session.add(product)
                             session.commit()
                         except ValueError:

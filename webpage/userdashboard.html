@@ -20,21 +20,19 @@
                 <a class="nav-link active" id="products-tab" onclick="fetchProducts()" data-bs-toggle="tab" href="#products" role="tab" aria-controls="products" aria-selected="true">Products</a>
             </li>
             <li class="nav-item" role="presentation">
-                <a class="nav-link" id="orders-tab" onclick="fetchOrders()" data-bs-toggle="tab" href="#orders" role="tab" aria-controls="orders" aria-selected="false">Orders</a>
+                <a class="nav-link" id="orders-tab" data-bs-toggle="tab" href="#orders" role="tab" aria-controls="orders" aria-selected="false">Orders</a>
             </li>
             <li class="nav-item">
-                <button class="btn btn-success ms-auto" onclick="addFunds()">Deposit $50</button>
+                <a class="nav-link" id="cart-tab" data-bs-toggle="tab" href="#cart-content" role="tab" aria-controls="cart-tab" aria-selected="false">View Cart</a>
             </li>
         </ul>
 
         <div class="tab-content mt-3" id="dashboard-tabs-content">
             <div class="tab-pane fade show active" id="products" role="tabpanel" aria-labelledby="products-tab">
                 <h3>Products</h3>
-                <p>Here, you can view and purchase products.</p>
                 <table class="table table-bordered">
                     <thead>
                         <tr>
-                            <!-- <th>Product ID</th> -->
                              <th></th>
                             <th>Name</th>
                             <th>Stock</th>
@@ -43,17 +41,12 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr>
-                        </tr>
-                        <tr>
-                        </tr>
                     </tbody>
                 </table>
             </div>
 
             <div class="tab-pane fade" id="orders" role="tabpanel" aria-labelledby="orders-tab">
                 <h3>Orders</h3>
-                <p>Here, you can see your orders.</p>
                 <table class="table table-bordered">
                     <thead>
                         <th>Order ID</th>
@@ -63,6 +56,28 @@
                     <tbody>
                     </tbody>
                 </table>
+            </div>
+
+            <div class="tab-pane fade" id="cart-content" role="tabpanel" aria-labelledby="cart-tab">
+                    <nav class="navbar">
+                        <h3>My Cart</h3>
+                        <button id="funds" class="btn btn-success ms-auto" onclick="addFunds()">Deposit $500</button>
+                    </nav>
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th></th>
+                                <th>Name</th>
+                                <th>Status</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                    <nav class="navbar">
+                        <button id="checkout" class="btn btn-warning ms-auto" onclick="checkoutCart()">Checkout</button>
+                    </nav>
             </div>
         </div>
     </div>

@@ -180,3 +180,4 @@ pyvenv.cfg
 /api/stale.py
 /samples
 /logger/dblogs
+/db/archiveall/*

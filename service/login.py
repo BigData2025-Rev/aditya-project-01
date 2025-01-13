@@ -29,7 +29,8 @@ class Login(BaseHandler):
                     return
 
                 logger.info("User: %s" %user)
-                logger.info("Password correct for user %s -> %s"%(user.username, user.check_password(self.data['password'])))
+                logger.info("Password correct for user %s -> %s"%(user.username,\
+                                                                  user.check_password(self.data['password'])))
                 if user.check_password(self.data['password']):
                     expiration = datetime.datetime.now() + datetime.timedelta(minutes=50)
                     token = jwt.encode({"sub": user.username, "exp": expiration.timestamp()},

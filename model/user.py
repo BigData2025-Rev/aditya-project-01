@@ -6,7 +6,7 @@ import uuid
 import enum
 
 from logger.logger import logger
-from sqlalchemy import Column, String, DateTime, BINARY, Float
+from sqlalchemy import Column, String, DateTime, BINARY, Float, Integer
 from sqlalchemy.orm import relationship
 from sqlalchemy import event
 from model.order import Order

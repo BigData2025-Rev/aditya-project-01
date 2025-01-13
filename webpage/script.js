@@ -1,4 +1,4 @@
-API_URL=''
+API_URL='http://localhost:8888'
 
 document.addEventListener('DOMContentLoaded', function () {
     const activeTab = document.querySelector('.nav-link.active');
@@ -36,7 +36,8 @@ document.addEventListener('DOMContentLoaded', function () {
         'products-tab': fetchProducts,
         'admin-products-tab': fetchAllProducts,
         'admin-users-tab': fetchAllUsers,
-        'admin-orders-tab': fetchAllOrders
+        'admin-orders-tab': fetchAllOrders,
+        'cart-tab': cart,
     }
 
     const observer = new MutationObserver(function(mutationsList) {
@@ -79,6 +80,7 @@ function toggleForms() {
 }
 
 async function login() {
+    console.log("Called login!")
     const username = document.getElementById('login-username').value;
     const password = document.getElementById('login-password').value;
 
@@ -151,29 +153,6 @@ async function register() {
     }
 }
 
-async function addFunds() {
-    userConfirmation = confirm("Are you sure? ")
-    if (!userConfirmation) {
-        return
-    }
-    const authToken = localStorage.getItem('authToken');
-    deposit_amount = 50;
-    const response = await fetch(`${API_URL}/user/addbalance`, {
-        method: 'POST',
-        headers: {
-            'Authorization': 'Bearer ' + authToken
-        },
-        body : JSON.stringify({ deposit_amount })
-    })
-    const data = await response.json();
-    if (!response.ok) {
-        localStorage.removeItem('authToken')
-        window.location.href = "./main.html";
-    }
-    alert(`${data.message}`)
-
-}
-
 function showError(message) {
     if (message) {
         const errorMessageDiv = document.getElementById('error-message');
@@ -188,7 +167,6 @@ function showErrorRegister(message) {
         errorMessageDiv.textContent = message;
         errorMessageDiv.style.display = 'block';
     }
-    
 }
 
 function logout() {
@@ -226,7 +204,6 @@ async function fetchAllUsers() {
             <td>${user['role']}</td>`;
         tableBody.appendChild(row);
     });
-
 }
 
 async function fetchProducts() {
@@ -255,9 +232,9 @@ async function fetchProducts() {
         // console.log(product);
         row.innerHTML = `<td><img src="${product['image']}"/></td>
                         <td>${product['name']}</td>
-                         <td>${product['stock']}</td>
-                        <td>$${product['price']}</td>
-                        <td><button class="btn btn-primary" onclick="purchaseProduct(${product['product_id']})">Purchase Product</button></td>`;
+                        <td>${product['stock']}</td>
+                        <td>${product['price']}</td>
+                        <td><button class="btn btn-primary" onclick="addToCart(${product['product_id']})">Add to Cart</button></td>`;
         tableBody.appendChild(row);
     });
 }
@@ -301,9 +278,9 @@ async function fetchAllOrders() {
                 }        
             }
             // // console.log(value)
-            table = `<table>`;
-            tableclose = `</table>`;
-            items = `<tr>`;
+            table = `<table><thead><th>Product Name</th><th>Quantity</th><th>Price</th>`;
+            tableclose = `</thead></table>`;
+            items = ``;
             // console.log(JSON.parse(value.items))
             if (value.items) {
                 // console.log(value.items.length)
@@ -312,8 +289,9 @@ async function fetchAllOrders() {
                     jsonItem = JSON.parse(item)
                     // <li><img src="${item['product_image']}"/></li>
                     //<td><img src="${jsonItem['product_image']}"/></td>
-                    items += `<td>${jsonItem['product_name']}</td>
-                              <td>Quantity: ${jsonItem['product_quantity']}</td>`;
+                    items += `<tr><td>${jsonItem['product_name']}</td>
+                              <td>${jsonItem['product_quantity']}</td>
+                              <td>${jsonItem['product_price']}</td></tr>`;
                 });
             }
             items += '</tr>'
@@ -396,11 +374,11 @@ async function removeProduct(product_id) {
     fetchAllProducts()
 }
 
-async function purchaseProduct(product_id, quantity=1) {
-    userConfirmation = confirm("Are you sure you want to purchase the item? ")
-    if (!userConfirmation) {
-        return
-    }
+async function addToCart(product_id, quantity=1) {
+    // userConfirmation = confirm("Are you sure you want to purchase the item? ")
+    // if (!userConfirmation) {
+    //     return
+    // }
     const authToken = localStorage.getItem('authToken');
     const response = await fetch(`${API_URL}/order`, {
                                 method: 'POST',
@@ -417,7 +395,6 @@ async function purchaseProduct(product_id, quantity=1) {
         alert(`Could not add order to cart! ${data.message}`);
     }
     fetchProducts()
-
 }
 
 async function fetchOrders() {
@@ -435,24 +412,30 @@ async function fetchOrders() {
     }
     const data = await response.json();
     const orders = data.orders;
+    // console.log(data)
     if (orders) {
+        const tableHead = document.querySelector('#orders thead');
+        tableHead.innerHTML = '';
+        tableHead.innerHTML = `<th>Order ID</th>
+                  <th>Items</th>
+                  <th>Status</th>`;
         const tableBody = document.querySelector('#orders tbody');
         tableBody.innerHTML = '';
         orders.forEach(order => {
             const row = document.createElement('tr');
             value = JSON.parse(order);
             // console.log(value)
-            table = `<table>`;
-            tableclose = `</table>`;
-            items = `<tr>`;
+            table = `<table><thead><th></th><th>Product Name</th><th>Quantity</th><th>Price</th>`;
+                tableclose = `</thead></table>`;
+            items = ``;
             value.items.forEach(item => {
                 jsonItem = JSON.parse(item)
                 // <li><img src="${item['product_image']}"/></li>
-                items += `<td><img src="${jsonItem['product_image']}"/></td>
+                items += `<tr><td><img src="${jsonItem['product_image']}"/></td>
                           <td>${jsonItem['product_name']}</td>
-                          <td>Quantity: ${jsonItem['product_quantity']}</td>`;
+                          <td>${jsonItem['product_quantity']}</td>
+                          <td>${jsonItem['product_price']}</tr>`;
             });
-            items += '</tr>'
             row.innerHTML = `
                 <td>${value['order_id']}</td>
                 <td>${table + items + tableclose}</td>
@@ -460,10 +443,14 @@ async function fetchOrders() {
             tableBody.appendChild(row);
         });
     } else {
+        const tableHead = document.querySelector('#orders thead');
+        tableHead.innerHTML = '';
+        const tableBody = document.querySelector('#orders tbody');
+        tableBody.innerHTML = '';
         const p = document.createElement('p')
         p.innerHTML = "You don't have any orders yet!"
+        tableHead.appendChild(p)
     }
-
 }
 
 function dropdownOptions() {
@@ -474,6 +461,106 @@ function dropdownOptions() {
             dropdownMenu.classList.toggle('show');
           });
     }
-
 }
 
+async function cart() {
+    const authToken = localStorage.getItem('authToken');
+    const response = await fetch(`${API_URL}/user/listcart`,{
+                         method: 'GET',
+                         headers: {
+                            'Authorization': 'Bearer '+ authToken
+                         }
+                        });
+    if (!response.ok) {
+        localStorage.removeItem('authToken')
+        window.location.href = "./main.html";
+    }
+    const data = await response.json();
+    const orders = await data.orders;
+    if(orders.length > 0) {
+        document.getElementById("funds").style.display = "inline";
+        document.getElementById("checkout").style.display = "inline";
+        const tableHead = document.querySelector('#cart-content thead');
+        tableHead.innerHTML = `<tr>
+                                <th></th>
+                                <th>Name</th>
+                                <th>Status</th>
+                                <th>Total</th>
+                              </tr>`;
+        const tableBody = document.querySelector('#cart-content tbody');
+        tableBody.innerHTML = '';
+        orders.forEach(order => {
+            const row = document.createElement('tr');
+            value = JSON.parse(order);
+            // console.log(value)
+            table = `<table><thead><th></th><th>Product Name</th><th>Quantity</th><th>Price</th>`;
+            tableclose = `</thead></table>`;
+            items = ``;
+            value.items.forEach(item => {
+                jsonItem = JSON.parse(item)
+                // <li><img src="${item['product_image']}"/></li>
+                items += `<tr><td><img src="${jsonItem['product_image']}"/></td>
+                        <td>${jsonItem['product_name']}</td>
+                        <td>${jsonItem['product_quantity']}</td>
+                        <td>${jsonItem['product_price']}</td></tr>`;
+            });
+            row.innerHTML = `
+                <td>${value['order_id']}</td>
+                <td>${table + items + tableclose}</td>
+                <td>${value['order_status']}</td>
+                <td>${value['total_amount']}`;
+            tableBody.appendChild(row);
+        });
+    }
+    else {
+        document.getElementById("funds").style.display = "none";
+        document.getElementById("checkout").style.display = "none";
+        const tableHead = document.querySelector('#cart-content thead');
+        tableHead.innerHTML = '';
+        const tableBody = document.querySelector('#cart-content tbody');
+        tableBody.innerHTML = '';
+        const p = document.createElement('p')
+        p.innerHTML = "You don't have any items in the cart yet!"
+        tableHead.appendChild(p)
+    }
+}
+
+
+async function checkoutCart() {
+    const authToken = localStorage.getItem('authToken');
+    const response = await fetch(`${API_URL}/user/checkout`,{
+                         method: 'POST',
+                         headers: {
+                            'Authorization': 'Bearer '+ authToken
+                         }
+                        });
+    const data = await response.json();
+    if (!response.ok) {
+        alert(`Could not add order to cart! ${data.message}`);
+    }
+    cart()
+}
+
+async function addFunds() {
+    deposit_amount = 500;
+    userConfirmation = confirm(`Are you sure you like the deposit ${deposit_amount}? `)
+    if (!userConfirmation) {
+        return
+    }
+    const authToken = localStorage.getItem('authToken');
+
+    const response = await fetch(`${API_URL}/user/addbalance`, {
+        method: 'POST',
+        headers: {
+            'Authorization': 'Bearer ' + authToken
+        },
+        body : JSON.stringify({ deposit_amount })
+    })
+    const data = await response.json();
+    if (!response.ok) {
+        localStorage.removeItem('authToken')
+        window.location.href = "./main.html";
+    }
+    alert(`${data.message}`)
+
+}

@@ -21,7 +21,7 @@ class Product(Base):
 
     order_item = relationship('OrderItem', back_populates='product')
     categ = relationship('Category', back_populates='product')
-    
+
 
 @event.listens_for(Product, 'before_delete')
 def set_product_id_on_product_delete(mapper, connection, product):

@@ -8,9 +8,23 @@ from logger.logger import logger
 from model.order import Order, OrderStatus
 from model.orderitem import OrderItem
 from model.product import Product
+from sqlalchemy import or_
 from model.user import User
 from utils.decorators.useraccess import access_token_required
 from utils.decorators.request import json_required
+
+class RemoveOrder(BaseHandler):
+    @access_token_required
+    def post(self, order_id):
+        with Db() as session:
+            try:
+                order = session.query(Order).filter(Order.id==order_id).first()
+                session.delete(order)
+                session.commit()
+            except Exception as e:
+                logger.info(f'Could not delete order with id: {order_id}')
+                self.set_status(500)
+                self.write({"success": False, "message": "could not delete order"})
 
 
 class OrderSingle(BaseHandler):
@@ -45,37 +59,46 @@ class OrderSingle(BaseHandler):
                     return
 
                 # place the order
-                total_amount = product.price * quantity
+                # total_amount = product.price * quantity
                 logger.info(f"Current User is: {uuid.UUID(bytes=self.current_user.id)}")
                 current_user = session.query(User).filter(User.id==self.current_user.id).first()
-                logger.info("Current User balance: %s Total Amount: %s" %(current_user.wallet_balance, total_amount))
-                if current_user.wallet_balance < total_amount:
-                    self.set_status(402)
-                    self.write({"message": "You don't have enough balance. Please add funds to your account!"})
-                    return
-                order = Order(ordered_by=current_user.id, total=total_amount)
-                session.add(order)
-                session.commit()
+                order = session.query(Order).filter(Order.ordered_by==current_user.id,\
+                                                    Order.status==OrderStatus.pending.value).first()
+                if order:
+                    found = False
+                    for item in order.order_items:
+                        if item.product_id == product_id:
+                            logger.info("%s %s" %(item.product_id, product_id))
+                            item.quantity += 1
+                            item.product.stock_quantity -= 1
+                            session.commit()
+                            found = True
+                    if not found:
+                        order_item = OrderItem(quantity=quantity, unitprice=product.price, order_id=order.id, product_id=product.id)
+                        product = session.query(Product).filter(Product.id==product_id).first()
+                        product.stock_quantity -= quantity
+                        session.add(order_item)
+                        session.commit()
 
-                logger.info(f"Order placed! {order.id} for {order.total}")
-                # place individual order items
-                order_item = OrderItem(quantity=quantity, unitprice=product.price, order_id=order.id, product_id=product.id)
-                session.add(order_item)
-                session.commit()
+                else:
+                    order = Order(ordered_by=current_user.id)
+                    session.add(order)
+                    session.commit()
+                    logger.info(f"Order placed! {order.id} for {order.total}")
+                    # place individual order items
+                    order_item = OrderItem(quantity=quantity, unitprice=product.price, order_id=order.id, product_id=product.id)
+                    product = session.query(Product).filter(Product.id==product_id).first()
+                    product.stock_quantity -= quantity
+                    session.add(order_item)
+                    session.commit()
 
-                current_user.wallet_balance-=total_amount
-                session.commit()
-
-                product.stock_quantity -= quantity
-                session.commit()
-
-                self.write({'order_id': order.id, "total_amount": f"{total_amount:.2f}"})
+                self.write({'order_id': order.id})
             except Exception as e:
                 logger.info(f"Could not order! {e}")
                 self.set_status(500)
                 self.write({"message": "Something went wrong!"})
                 return
-    
+
     @access_token_required
     def get(self, order_id):
         with Db() as session:
@@ -98,7 +121,11 @@ class OrderList(BaseHandler):
     def get(self):
         with Db() as session:
             try:
-                orders = session.query(Order).filter(Order.ordered_by==self.current_user.id).all()
+                orders = session.query(Order).filter(Order.ordered_by==self.current_user.id,\
+                                                     or_((Order.status==OrderStatus.completed.value), \
+                                                        (Order.status==OrderStatus.shipped.value),\
+                                                        (Order.status==OrderStatus.delivered.value))).all()
+                logger.info(orders)
                 # logger.info("User %s" %self.current_user.id)
                 if orders:
                     self.write({"orders": Order.get_json_values(orders)})

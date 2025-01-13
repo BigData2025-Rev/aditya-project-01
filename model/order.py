@@ -2,6 +2,7 @@ from datetime import datetime
 import json
 import uuid
 import enum
+from logger.logger import logger
 
 from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Float, BINARY
 from db.base import Base
@@ -40,20 +41,25 @@ class Order(Base):
             order_dict = {}
             order_dict['order_id'] = order.id
             order_dict['order_created'] = str(order.created_at)
-            order_dict['total_amount'] = f"{order.total:.2f}"
             order_dict['order_status'] = order.status
             order_dict['ordered_by'] = None
             if order.ordered_by:
                 order_dict['ordered_by'] = str(uuid.UUID(bytes=order.ordered_by))
+            total = 0.0
             if len(order.order_items) > 0:
                 order_dict['items'] = []
                 for item in order.order_items:
                     if item and item.product:
                         product = {}
+                        total += item.subtotal
                         product['product_name'] = item.product.name
                         product['product_image'] = item.product.image
+                        product['product_price'] = item.product.price
                         product['product_quantity'] = item.quantity
+                        product['stock_quantity'] = item.product.stock_quantity
                         order_dict['items'].append(json.dumps(product))
+            order_dict['total_amount'] = f"{total:.2f}"
+            logger.info(order_dict)
             response.append(json.dumps(order_dict))
         return response
 

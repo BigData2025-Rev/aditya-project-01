@@ -6,7 +6,7 @@ import os
 from sqlalchemy.exc import IntegrityError, OperationalError, DataError, DatabaseError, StatementError
 
 from db.session import session as Db
-from logger.logger import logger
+from logger.logger import logger, dblogger
 from model.user import User, Role
 from model.order import Order, OrderStatus
 from model.product import Product
