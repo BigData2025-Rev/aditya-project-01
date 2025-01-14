@@ -108,7 +108,7 @@ class OrderSingle(BaseHandler):
                 if order:
                     self.write(json.dumps(Order.get_json_value(order)))
                 else:
-                    self.status(400)
+                    self.set_status(400)
                     self.write({"message": "order not found!"})
             except json.JSONDecodeError:
                 self.set_status(400)
