@@ -1,4 +1,4 @@
-# online-store
+# world-store
 
 ### Step1: Setup Virtual Environment
 ```
